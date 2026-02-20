@@ -9,7 +9,7 @@ import openpyxl as xl
 #----------------------------
 
 # PATH to data file. Can just write "fileName.txt" if local directory
-dataFile = "plateReaderUnformatedData.txt"
+dataFile = "test/example.txt"
 
 # Define the function to fit
 # Make universal usage of variables
@@ -33,10 +33,10 @@ defaultUb = 10**12
 # Broken 1= .csv, alternating x y columns
 # 2= .txt output from plate reader
 # Broken 3= .txt output from Horiba
-dataFormat = 2
+dataFormat = 0
 
 # Print any plots?
-sett_plot = True
+sett_plot = False
 
 # Print the k values vs column number?
 # Broken, plots odd curves and fits too
