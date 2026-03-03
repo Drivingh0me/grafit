@@ -11,6 +11,9 @@ import openpyxl as xl
 # PATH to data file. Can just write "fileName.txt" if local directory
 dataFile = "test/example.txt"
 
+# Do you want to fit the data?
+sett_fit = True
+
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
