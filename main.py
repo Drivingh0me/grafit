@@ -39,14 +39,14 @@ defaultUb = 10**12
 dataFormat = 0
 
 # Print any plots?
-sett_plot = False
+sett_plot = True
 
 # Print the k values vs column number?
 # Broken, plots odd curves and fits too
 sett_plotK = True
 
 # Print the individual kinetic plots vs fit?
-sett_plotCurv = False
+sett_plotCurv = True
 
 # Export results to terminal?
 sett_outTerm = True
@@ -67,11 +67,13 @@ outfile = "analysis.txt"
 #----------------------------
 #----------------------------
 
+# MAKE THIS A FUNCTION!
 # SETT LOGIC
 if not sett_plot:
 	sett_plotK = False
 	sett_plotCurv = False
 
+# MAKE THIS A FUNCTION!
 # Determine number of variables to optimize
 funcSignature = inspect.signature(func)
 funcParameters = funcSignature.parameters
@@ -90,6 +92,7 @@ for x in range(numVar):
 		upperBound[x] = defaultUb
 
 sett_bounds = (lowerBound, upperBound)
+
 
 # DO THE WORK
 # Collect and format the data
@@ -130,6 +133,9 @@ def frmt_pltreader(file):
 def frmt_horiba(file):
 	return 1	
 
+
+# MAKE THIS A FUNCTION!
+# if guard to determine value for frmtdData.
 if dataFormat == 0:
 	frmtdData = np.loadtxt(dataFile, delimiter='\t')
 
@@ -145,6 +151,8 @@ elif dataFormat == 3:
 else:
 	print("invalid data format")
 
+
+# MAKE THIS A FUNCTION!
 # Load data into np array
 data = np.transpose(frmtdData)
 xdata = data[0]
@@ -163,6 +171,8 @@ for ydata in data:
 	except:
 		popt = np.zeros(numVar)
 	optimizedPerameters[n] = popt
+
+	ydata_try = np.tile(popt[:, np.newaxis], (1, len(xdata)))
 	# Plot individual trials
 	if sett_plotCurv:
 		try:
@@ -174,9 +184,6 @@ for ydata in data:
 
 	# Calculate integral by Riemann sum
 	areaUnderCurve = np.sum(ydata)
-
-	# Make popt the right shape and rename array
-	ydata_try = np.tile(popt[:, np.newaxis], (1, len(xdata)))
 
 	# Calculate R squared
 	residuals = ydata - func(xdata, *ydata_try)
@@ -236,24 +243,25 @@ if sett_outTerm:
 # Print k values
 def prnt_k():
 	try:
+		plt.figure()
 		plt.plot(xk1, optimizedPerameters[:, 2], 'o', label='k values')
 		plt.ylim(0, 1.1 * max(optimizedParameters[:, 2]))
 	except:
 		print("Failed to plot data")
 
 # Plot the fitted curve & data
-def prnt_dataVsCurv():
-	try:
-		plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
-	except:
-		print("Failed to plot fit data")
+# def prnt_dataVsCurv():
+# 	try:
+# 		plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
+# 	except:
+# 		print("Failed to plot fit data")
 
 
 if sett_plot:
 	if sett_plotK:
 		prnt_k()
-	if sett_plotCurv:
-		prnt_dataVsCurv()
+	# if sett_plotCurv:
+	# 	prnt_dataVsCurv()
 	plt.legend()
 	plt.show()
 
