@@ -9,7 +9,7 @@ import openpyxl as xl
 #----------------------------
 
 # PATH to data file. Can just write "fileName.txt" if local directory
-dataFile = "data/CMG2_164.txt"
+dataFile = "data/CMG2_168.txt"
 
 # Do you want to fit the data?
 sett_fit = True
@@ -17,6 +17,7 @@ sett_fit = True
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
+parameters = ("a","b")
 def func(x, a, b):
 	return a * np.exp(-b * x)
 
@@ -39,12 +40,11 @@ defaultUb = 10**12
 dataFormat = 2
 
 # Print any plots?
-sett_plot = True
+sett_plot = False
 
-# Print the k values vs column number?
-# Broken, plots odd curves and fits too
+# Print a value vs column number?
 sett_plotK = True
-# What is the index of the k variable?
+# What is the index of the variable?
 kIndex = 1;
 
 # Print the individual kinetic plots vs fit?
@@ -56,14 +56,14 @@ sett_outTerm = False
 # Export the results to a .txt file?
 # Broken
 sett_outTxt = True
-outfile = dataFile.split(".")
-outfile = outfile[0] + "Analysis.txt"
+fname = dataFile.split(".")
+outfile = fname[0] + "Analysis.txt"
 
 # Export the results to an excel file?
 # Not implemented
-#sett_outxlsx = False
+sett_outxlsx = True
 
-# Create a plot in the axcel file?
+# Create a plot in the excel file?
 # Not implementes
 # sett_xlsxGraph = False
 
@@ -241,11 +241,32 @@ def export_term():
 	print("Optimize parameters are: a, b, c...\n" + str(optimizedPerameters))
 	print("Statistics are: R^2, RMSE, integration\n" + str(statistics))
 
+def export_xlsx():
+	wb = xl.Workbook()
+	ws = wb.active
+
+	# Label coumns
+	ws.append(parameters)
+
+	for row in optimizedPerameters:
+		ws.append(row.tolist())
+
+	statNames = ("R^2","RMSE","Integral")
+	ws.append(statNames)
+	for row in statistics:
+		ws.append(row.tolist())
+
+	# Save the file
+	wb.save(fname[0] + "Analysis.xlsx")
+
 if sett_outTxt:
 	export_txt()
 
 if sett_outTerm:
 	export_term()
+
+if sett_outxlsx:
+	export_xlsx()
 
 # PLOT DATA
 # Print k values
