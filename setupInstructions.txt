@@ -1,0 +1,15 @@
+Create venue (in dir):
+	python3 -m venv venv
+
+Activate venv(recommend to perform this in the IDE terminal, in the project's directory):
+	source venv/bin/activate
+
+Install requirements with pip:
+	pip install -r requirements.txt
+
+You may now use the envirement!
+
+Deactivate venv:
+	deactivate
+
+

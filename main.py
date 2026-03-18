@@ -9,7 +9,7 @@ import openpyxl as xl
 #----------------------------
 
 # PATH to data file. Can just write "fileName.txt" if local directory
-dataFile = "test/example.txt"
+dataFile = "data/CMG2_164.txt"
 
 # Do you want to fit the data?
 sett_fit = True
@@ -17,8 +17,8 @@ sett_fit = True
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
-def func(x, a, b, c):
-	return a * np.exp(-c * x) + b
+def func(x, a, b):
+	return a * np.exp(-b * x)
 
 # Eg. Worst case function
 # a=A, b=B, c=k1, d=k2, f=ti
@@ -26,7 +26,7 @@ def func(x, a, b, c):
 
 # Bounds for fitting curve
 # Array size should match number of variables to optimize
-bounds = ([0, 0, 0], [10000000, 1000000, 0.5])
+bounds = ([0, 0], [10000000, 0.5])
 # Default bounds
 defaultLb = 0
 defaultUb = 10**12
@@ -36,7 +36,7 @@ defaultUb = 10**12
 # Broken 1= .csv, alternating x y columns
 # 2= .txt output from plate reader
 # Broken 3= .txt output from Horiba
-dataFormat = 0
+dataFormat = 2
 
 # Print any plots?
 sett_plot = True
@@ -44,17 +44,20 @@ sett_plot = True
 # Print the k values vs column number?
 # Broken, plots odd curves and fits too
 sett_plotK = True
+# What is the index of the k variable?
+kIndex = 1;
 
 # Print the individual kinetic plots vs fit?
 sett_plotCurv = True
 
 # Export results to terminal?
-sett_outTerm = True
+sett_outTerm = False
 
 # Export the results to a .txt file?
 # Broken
-sett_outTxt = False
-outfile = "analysis.txt"
+sett_outTxt = True
+outfile = dataFile.split(".")
+outfile = outfile[0] + "Analysis.txt"
 
 # Export the results to an excel file?
 # Not implemented
@@ -93,6 +96,9 @@ for x in range(numVar):
 
 sett_bounds = (lowerBound, upperBound)
 
+# Convert an np array to a tab separated string
+def arr2str(arr):
+	return np.array2string(arr, separator='\t', precision=5)
 
 # DO THE WORK
 # Collect and format the data
@@ -179,6 +185,7 @@ for ydata in data:
 			plt.figure()
 			plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
 			plt.plot(xdata, ydata, 'o', label='data')
+			plt.legend()
 		except:
 			print("Failed to plot fit data")
 
@@ -204,7 +211,8 @@ avgRSquared = np.mean(statistics[:, 0])
 avgRmse = np.mean(statistics[:, 1])
 avgArea = np.mean(statistics[:, 2])
 
-xk1 = list(range(len(optimizedPerameters[:, 2])))
+#Depends on Func
+xk1 = list(range(len(optimizedPerameters[:, kIndex])))
 
 # EXPORT DATA
 def export_txt():
@@ -217,9 +225,9 @@ def export_txt():
 		f.write("Mean of integrals = " + str(avgArea) + "\n")
 		# Report parameters and statistics
 		f.write("Optimize parameters are: a, b, c...\n" 
-			+ str(optimizedPerameters) + "\n")
+			+ arr2str(optimizedPerameters) + "\n")
 		f.write("Statistics are: R^2, RMSE, integration\n" 
-			+ str(statistics))
+			+ arr2str(statistics))
 	
 
 def export_term():
@@ -244,10 +252,11 @@ if sett_outTerm:
 def prnt_k():
 	try:
 		plt.figure()
-		plt.plot(xk1, optimizedPerameters[:, 2], 'o', label='k values')
-		plt.ylim(0, 1.1 * max(optimizedParameters[:, 2]))
+		plt.plot(xk1, optimizedPerameters[:, kIndex], 'o', label='k values')
+		#plt.ylim(0, 1.1 * max(optimizedPerameters[:, kIndex]))
+		plt.legend()
 	except:
-		print("Failed to plot data")
+		print("Failed to plot data!")
 
 # Plot the fitted curve & data
 # def prnt_dataVsCurv():
@@ -262,7 +271,7 @@ if sett_plot:
 		prnt_k()
 	# if sett_plotCurv:
 	# 	prnt_dataVsCurv()
-	plt.legend()
+	# plt.legend()
 	plt.show()
 
 print("Finished")
