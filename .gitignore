@@ -6,7 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
-data/
+data/*
 !data/example.*
 
 # Distribution / packaging

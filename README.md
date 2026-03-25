@@ -1,4 +1,4 @@
-# chlorine35
+# grafit
 A simple python script for fitting and plotting chemical kinetics data.
 
 # How to install requirements
