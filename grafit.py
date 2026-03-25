@@ -1,15 +1,18 @@
 import numpy as np
+import argparse
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import inspect
 import openpyxl as xl
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 
 #----------------------------
 # SETTINGS
 #----------------------------
 
 # PATH to data file. Can just write "fileName.txt" if local directory
-dataFile = "data/CMG2_168.txt"
+dataFile = "data/CMG2_170.txt"
 
 # Do you want to fit the data?
 sett_fit = True
@@ -17,9 +20,9 @@ sett_fit = True
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
-parameters = ("a","b")
-def func(x, a, b):
-	return a * np.exp(-b * x)
+parameters = ("a","b","c")
+def func(x, a, b, c):
+	return a * np.exp(-b * x) + c
 
 # Eg. Worst case function
 # a=A, b=B, c=k1, d=k2, f=ti
@@ -27,7 +30,7 @@ def func(x, a, b):
 
 # Bounds for fitting curve
 # Array size should match number of variables to optimize
-bounds = ([0, 0], [10000000, 0.5])
+bounds = ([0, 0, 0], [10000000, 0.5, 1000])
 # Default bounds
 defaultLb = 0
 defaultUb = 10**12
@@ -55,13 +58,13 @@ sett_outTerm = False
 
 # Export the results to a .txt file?
 # Broken
-sett_outTxt = True
+sett_outTxt = False
 fname = dataFile.split(".")
 outfile = fname[0] + "Analysis.txt"
 
 # Export the results to an excel file?
 # Not implemented
-sett_outxlsx = True
+sett_outxlsx = False
 
 # Create a plot in the excel file?
 # Not implementes
@@ -204,9 +207,6 @@ for ydata in data:
 	n += 1
 
 # Statistical analysis
-# avgA = np.mean(optimizedPerameters[:, 0])
-# avgB = np.mean(optimizedPerameters[:, 1])
-# avgk1 = np.mean(optimizedPerameters[:, 2])
 avgRSquared = np.mean(statistics[:, 0])
 avgRmse = np.mean(statistics[:, 1])
 avgArea = np.mean(statistics[:, 2])
@@ -217,9 +217,6 @@ xk1 = list(range(len(optimizedPerameters[:, kIndex])))
 # EXPORT DATA
 def export_txt():
 	with open(outfile, "w") as f:
-		# f.write("Mean of A = " + str(avgA) + "\n")
-		# f.write("Mean of B = " + str(avgB) + "\n")
-		# f.write("Mean of k1 = " + str(avgk1) + "\n")
 		f.write("Mean of R Squared = " + str(avgRSquared) + "\n")
 		f.write("Mean of RMSE = " + str(avgRmse) + "\n")
 		f.write("Mean of integrals = " + str(avgArea) + "\n")
@@ -231,9 +228,6 @@ def export_txt():
 	
 
 def export_term():
-	# print("Mean of A = " + str(avgA))
-	# print("Mean of B = " + str(avgB))
-	# print("Mean of k1 = " + str(avgk1))
 	print("Mean of R Squared = " + str(avgRSquared))
 	print("Mean of RMSE = " + str(avgRmse))
 	print("Mean of integrals = " + str(avgArea))
@@ -279,20 +273,30 @@ def prnt_k():
 	except:
 		print("Failed to plot data!")
 
-# Plot the fitted curve & data
-# def prnt_dataVsCurv():
-# 	try:
-# 		plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
-# 	except:
-# 		print("Failed to plot fit data")
-
-
 if sett_plot:
 	if sett_plotK:
 		prnt_k()
-	# if sett_plotCurv:
-	# 	prnt_dataVsCurv()
-	# plt.legend()
 	plt.show()
 
-print("Finished")
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("file", help="files to analyze", nargs='*')
+	parser.add_argument("-p", "--plot", help="plot data", action="store_true")
+	args = parser.parse_args()
+	print(f"File is: {args.file}");
+	if args.plot:
+		print("ploting data")
+
+	# Only do this when no file from cli
+	Tk().withdraw()
+	filePath = askopenfilename()
+
+	if filePath:
+		print(f"File path: {filePath}")
+	else:
+		print("No file selected")
+
+	print("Finished")
+
+if __name__ == "__main__":
+	main()
