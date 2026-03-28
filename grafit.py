@@ -12,7 +12,7 @@ from tkinter.filedialog import askopenfilename
 #----------------------------
 
 # PATH to data file. Can just write "fileName.txt" if local directory
-dataFile = "data/CMG2_170.txt"
+dataFile = "data/CMG2_175.txt"
 
 # Do you want to fit the data?
 sett_fit = True
@@ -20,9 +20,9 @@ sett_fit = True
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
-parameters = ("a","b","c")
-def func(x, a, b, c):
-	return a * np.exp(-b * x) + c
+parameters = ("a","b")
+def func(x, a, b):
+	return a * np.exp(-b * x)
 
 # Eg. Worst case function
 # a=A, b=B, c=k1, d=k2, f=ti
@@ -30,7 +30,7 @@ def func(x, a, b, c):
 
 # Bounds for fitting curve
 # Array size should match number of variables to optimize
-bounds = ([0, 0, 0], [10000000, 0.5, 1000])
+bounds = ([0, 0], [10000000, 0.5])
 # Default bounds
 defaultLb = 0
 defaultUb = 10**12
@@ -43,7 +43,7 @@ defaultUb = 10**12
 dataFormat = 2
 
 # Print any plots?
-sett_plot = False
+sett_plot = True
 
 # Print a value vs column number?
 sett_plotK = True
@@ -64,7 +64,7 @@ outfile = fname[0] + "Analysis.txt"
 
 # Export the results to an excel file?
 # Not implemented
-sett_outxlsx = False
+sett_outxlsx = True
 
 # Create a plot in the excel file?
 # Not implementes
@@ -251,7 +251,7 @@ def export_xlsx():
 		ws.append(row.tolist())
 
 	# Save the file
-	wb.save(fname[0] + "Analysis.xlsx")
+	wb.save(fname[0] + "AnalysisNoBg.xlsx")
 
 if sett_outTxt:
 	export_txt()
@@ -288,13 +288,14 @@ def main():
 		print("ploting data")
 
 	# Only do this when no file from cli
-	Tk().withdraw()
-	filePath = askopenfilename()
+	# if args.file == []:
+		# Tk().withdraw()
+		# filePath = askopenfilename()
 
-	if filePath:
-		print(f"File path: {filePath}")
-	else:
-		print("No file selected")
+	# if filePath:
+	# 	print(f"File path: {filePath}")
+	# else:
+	# 	print("No file selected")
 
 	print("Finished")
 
