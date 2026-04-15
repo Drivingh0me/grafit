@@ -12,7 +12,7 @@ from tkinter.filedialog import askopenfilename
 #----------------------------
 
 # PATH to data file. Can just write "fileName.txt" if local directory
-dataFile = "data/CMG2_175.txt"
+dataFile = "data/example.txt"
 
 # Do you want to fit the data?
 sett_fit = True
@@ -27,13 +27,6 @@ def func(x, a, b):
 # Eg. Worst case function
 # a=A, b=B, c=k1, d=k2, f=ti
 #a * (np.exp(-c * (x+f)) - np.exp(-d * (x+f))) + b
-
-# Bounds for fitting curve
-# Array size should match number of variables to optimize
-bounds = ([0, 0], [10000000, 0.5])
-# Default bounds
-defaultLb = 0
-defaultUb = 10**12
 
 # Input data format
 # 0= .txt where first column x, all other columns y
@@ -73,31 +66,26 @@ sett_outxlsx = True
 #----------------------------
 #----------------------------
 
-# MAKE THIS A FUNCTION!
-# SETT LOGIC
-if not sett_plot:
-	sett_plotK = False
-	sett_plotCurv = False
-
-# MAKE THIS A FUNCTION!
 # Determine number of variables to optimize
-funcSignature = inspect.signature(func)
-funcParameters = funcSignature.parameters
-numVar = len(funcParameters) - 1
-# Fix bounds
-lowerBound = np.zeros(numVar)
-upperBound = np.zeros(numVar)
-for x in range(numVar):
-	try:
-		lowerBound[x] = bounds[0][x]
-	except:
-		lowerBound[x] = defaultLb
-	try:
-		upperBound[x] = bounds[1][x]
-	except:
-		upperBound[x] = defaultUb
+def get_numVar(func):
+	funcSignature = inspect.signature(func)
+	funcParameters = funcSignature.parameters
+	return len(funcParameters) - 1
 
-sett_bounds = (lowerBound, upperBound)
+# Fix bounds
+def get_bounds(bounds, defaultBounds ,numVar):
+	lowerBound = np.zeros(numVar)
+	upperBound = np.zeros(numVar)
+	for x in range(numVar):
+		try:
+			lowerBound[x] = bounds[0][x]
+		except:
+			lowerBound[x] = defaultBounds[0]
+		try:
+			upperBound[x] = bounds[1][x]
+		except:
+			upperBound[x] = defaultBounds[1]
+		return (lowerBound, upperBound)
 
 # Convert an np array to a tab separated string
 def arr2str(arr):
@@ -142,84 +130,66 @@ def frmt_pltreader(file):
 def frmt_horiba(file):
 	return 1	
 
-
-# MAKE THIS A FUNCTION!
 # if guard to determine value for frmtdData.
-if dataFormat == 0:
-	frmtdData = np.loadtxt(dataFile, delimiter='\t')
+def get_frmtdData(dataFormat, dataFile):
+	if dataFormat == 0:
+		frmtdData = np.loadtxt(dataFile, delimiter='\t')
 
-elif dataFormat == 1:
-	print("Not implemented yet.")
+	elif dataFormat == 1:
+		print("Not implemented yet.")
 
-elif dataFormat == 2:
-	frmtdData = frmt_pltreader(dataFile)
-	
-elif dataFormat == 3:
-	print("Not implemented yet.")
+	elif dataFormat == 2:
+		frmtdData = frmt_pltreader(dataFile)
+		
+	elif dataFormat == 3:
+		print("Not implemented yet.")
 
-else:
-	print("invalid data format")
-
-
-# MAKE THIS A FUNCTION!
-# Load data into np array
-data = np.transpose(frmtdData)
-xdata = data[0]
-data = np.delete(data, 0, axis=0)
-
-# Create arrays of specific size
-optimizedPerameters = np.empty((len(data),numVar))
-statistics = np.empty((len(data),3))
-n = 0
+	else:
+		print("invalid data format")
+	return frmtdData
 
 # Fit the function to the data
-for ydata in data:
-	try:
-		popt, pcov = curve_fit(func, 
-			np.transpose(xdata), ydata, bounds = sett_bounds)
-	except:
-		popt = np.zeros(numVar)
-	optimizedPerameters[n] = popt
-
-	ydata_try = np.tile(popt[:, np.newaxis], (1, len(xdata)))
-	# Plot individual trials
-	if sett_plotCurv:
+def fit_data(data, xdata, func, optimizedPerameters, bounds, statistics):
+	n = 0
+	for ydata in data:
 		try:
-			plt.figure()
-			plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
-			plt.plot(xdata, ydata, 'o', label='data')
-			plt.legend()
+			popt, pcov = curve_fit(func, 
+				np.transpose(xdata), ydata, bounds = sett_bounds)
 		except:
-			print("Failed to plot fit data")
+			popt = np.zeros(numVar)
+		optimizedPerameters[n] = popt
 
-	# Calculate integral by Riemann sum
-	areaUnderCurve = np.sum(ydata)
+		ydata_try = np.tile(popt[:, np.newaxis], (1, len(xdata)))
+		# Plot individual trials
+		if sett_plotCurv:
+			try:
+				plt.figure()
+				plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
+				plt.plot(xdata, ydata, 'o', label='data')
+				plt.legend()
+			except:
+				print("Failed to plot fit data")
 
-	# Calculate R squared
-	residuals = ydata - func(xdata, *ydata_try)
-	ss_res = np.sum(residuals ** 2)
-	ss_tot = np.sum((ydata - np.mean(ydata)) ** 2)
-	r_squared = 1 - (ss_res / ss_tot)
+		# Calculate integral by Riemann sum
+		areaUnderCurve = np.sum(ydata)
 
-	# Calculate root mean square error (RMSE)
-	rmse = np.sqrt(np.mean(residuals ** 2))
-	statistics[n] = (r_squared, rmse, areaUnderCurve)
-	n += 1
+		# Calculate R squared
+		residuals = ydata - func(xdata, *ydata_try)
+		ss_res = np.sum(residuals ** 2)
+		ss_tot = np.sum((ydata - np.mean(ydata)) ** 2)
+		r_squared = 1 - (ss_res / ss_tot)
 
-# Statistical analysis
-avgRSquared = np.mean(statistics[:, 0])
-avgRmse = np.mean(statistics[:, 1])
-avgArea = np.mean(statistics[:, 2])
-
-#Depends on Func
-xk1 = list(range(len(optimizedPerameters[:, kIndex])))
+		# Calculate root mean square error (RMSE)
+		rmse = np.sqrt(np.mean(residuals ** 2))
+		statistics[n] = (r_squared, rmse, areaUnderCurve)
+		n += 1
 
 # EXPORT DATA
-def export_txt():
+def export_txt(optimizedParameters, statistics):
 	with open(outfile, "w") as f:
-		f.write("Mean of R Squared = " + str(avgRSquared) + "\n")
-		f.write("Mean of RMSE = " + str(avgRmse) + "\n")
-		f.write("Mean of integrals = " + str(avgArea) + "\n")
+		# f.write("Mean of R Squared = " + str(avgRSquared) + "\n")
+		# f.write("Mean of RMSE = " + str(avgRmse) + "\n")
+		# f.write("Mean of integrals = " + str(avgArea) + "\n")
 		# Report parameters and statistics
 		f.write("Optimize parameters are: a, b, c...\n" 
 			+ arr2str(optimizedPerameters) + "\n")
@@ -227,22 +197,22 @@ def export_txt():
 			+ arr2str(statistics))
 	
 
-def export_term():
-	print("Mean of R Squared = " + str(avgRSquared))
-	print("Mean of RMSE = " + str(avgRmse))
-	print("Mean of integrals = " + str(avgArea))
+def export_term(optimizedParameters, statistics):
+	# print("Mean of R Squared = " + str(avgRSquared))
+	# print("Mean of RMSE = " + str(avgRmse))
+	# print("Mean of integrals = " + str(avgArea))
 	# Report parameters and statistics
 	print("Optimize parameters are: a, b, c...\n" + str(optimizedPerameters))
 	print("Statistics are: R^2, RMSE, integration\n" + str(statistics))
 
-def export_xlsx():
+def export_xlsx(optimizedParameters, statistics):
 	wb = xl.Workbook()
 	ws = wb.active
 
 	# Label coumns
 	ws.append(parameters)
 
-	for row in optimizedPerameters:
+	for row in optimizedParameters:
 		ws.append(row.tolist())
 
 	statNames = ("R^2","RMSE","Integral")
@@ -252,15 +222,6 @@ def export_xlsx():
 
 	# Save the file
 	wb.save(fname[0] + "AnalysisNoBg.xlsx")
-
-if sett_outTxt:
-	export_txt()
-
-if sett_outTerm:
-	export_term()
-
-if sett_outxlsx:
-	export_xlsx()
 
 # PLOT DATA
 # Print k values
@@ -273,10 +234,6 @@ def prnt_k():
 	except:
 		print("Failed to plot data!")
 
-if sett_plot:
-	if sett_plotK:
-		prnt_k()
-	plt.show()
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -296,7 +253,50 @@ def main():
 	# 	print(f"File path: {filePath}")
 	# else:
 	# 	print("No file selected")
+	# END OF ARG PASRSE -------------------------------------------
 
+	# SETT LOGIC
+	if not sett_plot:
+		sett_plotK = False
+		sett_plotCurv = False
+
+	# Bounds for fitting curve
+	# Array size should match number of variables to optimize
+	usrBounds = ([0, 0], [10000000, 0.5])
+	defaultBounds = [0, 10**12]
+
+	numVar = get_numVar(func)
+	bounds = get_bounds(usrBounds, defaultBounds ,numVar)
+
+	frmtdData = get_frmtdData(dataFormat, dataFile)
+
+	data = np.transpose(frmtdData)
+	xdata = data[0]
+	data = np.delete(data, 0, axis=0)
+	optimizedParameters = np.empty((len(data),numVar))
+	statistics = np.empty((len(data),3))
+
+	# Statistical analysis
+	avgRSquared = np.mean(statistics[:, 0])
+	avgRmse = np.mean(statistics[:, 1])
+	avgArea = np.mean(statistics[:, 2])
+	#Depends on Func
+	xk1 = list(range(len(optimizedParameters[:, kIndex])))
+
+	if sett_outTxt:
+		export_txt(optimizedParameters, statistics)
+
+	if sett_outTerm:
+		export_term(optimizedParameters, statistics)
+
+	if sett_outxlsx:
+		export_xlsx(optimizedParameters, statistics)
+	
+	if sett_plot:
+		if sett_plotK:
+			prnt_k()
+		plt.show()
+	
 	print("Finished")
 
 if __name__ == "__main__":
