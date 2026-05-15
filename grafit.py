@@ -38,8 +38,8 @@ dataFormat = 2
 # Print any plots?
 sett_plot = True
 
-# Print a value vs column number?
-sett_plotK = True
+# # Print a value vs column number?
+# sett_plotK = True
 # What is the index of the variable?
 kIndex = 1;
 
@@ -56,7 +56,6 @@ fname = dataFile.split(".")
 outfile = fname[0] + "Analysis.txt"
 
 # Export the results to an excel file?
-# Not implemented
 sett_outxlsx = True
 
 # Create a plot in the excel file?
@@ -236,6 +235,9 @@ def prnt_k():
 
 
 def main():
+	# Print a value vs column number?
+	sett_plotK = True
+
 	parser = argparse.ArgumentParser()
 	parser.add_argument("file", help="files to analyze", nargs='*')
 	parser.add_argument("-p", "--plot", help="plot data", action="store_true")
