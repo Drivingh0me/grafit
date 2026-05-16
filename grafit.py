@@ -247,9 +247,13 @@ def main():
 		print("ploting data")
 
 	# Only do this when no file from cli
-	# if args.file == []:
-		# Tk().withdraw()
-		# filePath = askopenfilename()
+	if args.file == []:
+		Tk().withdraw()
+		dataFile = askopenfilename()
+	else:
+		dataFile = args.file
+
+	print(f"dataFile is {dataFile}")
 
 	# if filePath:
 	# 	print(f"File path: {filePath}")
