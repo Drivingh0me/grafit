@@ -12,7 +12,7 @@ from tkinter.filedialog import askopenfilename
 #----------------------------
 
 # PATH to data file. Can just write "fileName.txt" if local directory
-dataFile = "data/example.txt"
+# dataFile = "data/example.txt"
 
 # Do you want to fit the data?
 sett_fit = True
@@ -52,8 +52,8 @@ sett_outTerm = False
 # Export the results to a .txt file?
 # Broken
 sett_outTxt = False
-fname = dataFile.split(".")
-outfile = fname[0] + "Analysis.txt"
+# fname = dataFile.split(".")
+# outfile = fname[0] + "Analysis.txt"
 
 # Export the results to an excel file?
 sett_outxlsx = True
@@ -204,7 +204,7 @@ def export_term(optimizedParameters, statistics):
 	print("Optimize parameters are: a, b, c...\n" + str(optimizedPerameters))
 	print("Statistics are: R^2, RMSE, integration\n" + str(statistics))
 
-def export_xlsx(optimizedParameters, statistics):
+def export_xlsx(optimizedParameters, statistics, fname):
 	wb = xl.Workbook()
 	ws = wb.active
 
@@ -224,7 +224,7 @@ def export_xlsx(optimizedParameters, statistics):
 
 # PLOT DATA
 # Print k values
-def prnt_k():
+def prnt_k(xk1, optimizedPerameters, kIndex):
 	try:
 		plt.figure()
 		plt.plot(xk1, optimizedPerameters[:, kIndex], 'o', label='k values')
@@ -254,6 +254,9 @@ def main():
 		dataFile = args.file
 
 	print(f"dataFile is {dataFile}")
+
+	fname = dataFile.split(".")
+	outfile = fname[0] + "Analysis.txt"
 
 	# if filePath:
 	# 	print(f"File path: {filePath}")
@@ -296,11 +299,11 @@ def main():
 		export_term(optimizedParameters, statistics)
 
 	if sett_outxlsx:
-		export_xlsx(optimizedParameters, statistics)
+		export_xlsx(optimizedParameters, statistics, fname)
 	
 	if sett_plot:
 		if sett_plotK:
-			prnt_k()
+			prnt_k(xk1, optimizedParameters, kIndex)
 		plt.show()
 	
 	print("Finished")
