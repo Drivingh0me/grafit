@@ -11,12 +11,6 @@ from tkinter.filedialog import askopenfilename
 # SETTINGS
 #----------------------------
 
-# PATH to data file. Can just write "fileName.txt" if local directory
-# dataFile = "data/example.txt"
-
-# Do you want to fit the data?
-sett_fit = True
-
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
@@ -35,19 +29,11 @@ def func(x, a, b):
 # Broken 3= .txt output from Horiba
 dataFormat = 2
 
-# Print any plots?
-sett_plot = True
-
-# # Print a value vs column number?
-# sett_plotK = True
 # What is the index of the variable?
 kIndex = 1;
 
-# Print the individual kinetic plots vs fit?
-sett_plotCurv = True
-
 # Export results to terminal?
-sett_outTerm = False
+sett_outTerm = True
 
 # Export the results to a .txt file?
 # Broken
@@ -56,11 +42,7 @@ sett_outTxt = False
 # outfile = fname[0] + "Analysis.txt"
 
 # Export the results to an excel file?
-sett_outxlsx = True
-
-# Create a plot in the excel file?
-# Not implementes
-# sett_xlsxGraph = False
+sett_outxlsx = False
 
 #----------------------------
 #----------------------------
@@ -127,40 +109,52 @@ def frmt_pltreader(file):
 	return dArr
 
 def frmt_horiba(file):
-	return 1	
+	return 1
 
 # if guard to determine value for frmtdData.
 def get_frmtdData(dataFormat, dataFile):
-	if dataFormat == 0:
+	if dataFormat == 0: # Simple x column + y columns
 		frmtdData = np.loadtxt(dataFile, delimiter='\t')
 
-	elif dataFormat == 1:
-		print("Not implemented yet.")
+	elif dataFormat == 1: # .csv file
+		raise ValueError("csv format not implemented")
 
-	elif dataFormat == 2:
+	elif dataFormat == 2: # Plate reader .txt file
 		frmtdData = frmt_pltreader(dataFile)
 		
-	elif dataFormat == 3:
-		print("Not implemented yet.")
+	elif dataFormat == 3: # Horiba .txt file
+		raise ValueError("horiba.txt format not implemented")
 
 	else:
-		print("invalid data format")
+		raise ValueError(f"Format value: {dataFormat} is out of range: 0-3")
 	return frmtdData
 
 # Fit the function to the data
-def fit_data(data, xdata, func, optimizedPerameters, bounds, statistics):
+def fit_data(
+		data, xdata, func, optimizedPerameters,
+		bounds, statistics, sett_plot
+	):
 	n = 0
 	for ydata in data:
 		try:
-			popt, pcov = curve_fit(func, 
-				np.transpose(xdata), ydata, bounds = sett_bounds)
+			popt, pcov = curve_fit(
+				func, 
+				np.transpose(xdata), 
+				ydata, bounds = bounds
+			)
 		except:
 			popt = np.zeros(numVar)
+			print(f"Failed to fit {n}th curve")
+
+		# Trying to use pcov:
+		perr = np.sqrt(np.diag(pcov))
+		print(f"perr is: \n{perr}\n")
+
 		optimizedPerameters[n] = popt
 
 		ydata_try = np.tile(popt[:, np.newaxis], (1, len(xdata)))
 		# Plot individual trials
-		if sett_plotCurv:
+		if sett_plot:
 			try:
 				plt.figure()
 				plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
@@ -186,9 +180,6 @@ def fit_data(data, xdata, func, optimizedPerameters, bounds, statistics):
 # EXPORT DATA
 def export_txt(optimizedParameters, statistics):
 	with open(outfile, "w") as f:
-		# f.write("Mean of R Squared = " + str(avgRSquared) + "\n")
-		# f.write("Mean of RMSE = " + str(avgRmse) + "\n")
-		# f.write("Mean of integrals = " + str(avgArea) + "\n")
 		# Report parameters and statistics
 		f.write("Optimize parameters are: a, b, c...\n" 
 			+ arr2str(optimizedPerameters) + "\n")
@@ -197,11 +188,8 @@ def export_txt(optimizedParameters, statistics):
 	
 
 def export_term(optimizedParameters, statistics):
-	# print("Mean of R Squared = " + str(avgRSquared))
-	# print("Mean of RMSE = " + str(avgRmse))
-	# print("Mean of integrals = " + str(avgArea))
 	# Report parameters and statistics
-	print("Optimize parameters are: a, b, c...\n" + str(optimizedPerameters))
+	print("Optimize parameters are: a, b, c...\n" + str(optimizedParameters))
 	print("Statistics are: R^2, RMSE, integration\n" + str(statistics))
 
 def export_xlsx(optimizedParameters, statistics, fname):
@@ -235,33 +223,36 @@ def prnt_k(xk1, optimizedPerameters, kIndex):
 
 
 def main():
-	# Print a value vs column number?
-	sett_plotK = True
-
+	sett_fit = True
 	parser = argparse.ArgumentParser()
 	parser.add_argument("file", help="files to analyze", nargs='*')
 	parser.add_argument("-p", "--plot", help="plot data", action="store_true")
+	parser.add_argument("-f", "--fit", help="fit data", action="store_true")
 	args = parser.parse_args()
 	print(f"File is: {args.file}");
 	if args.plot:
+		sett_plot = True
+		sett_plotK = True
 		print("ploting data")
+	else:
+		sett_plot = False
+		sett_plotk = False
 
 	# Only do this when no file from cli
 	if args.file == []:
 		Tk().withdraw()
 		dataFile = askopenfilename()
 	else:
-		dataFile = args.file
+		# Cheaply grabs first filename
+		dataFile = args.file[0]
 
 	print(f"dataFile is {dataFile}")
 
 	fname = dataFile.split(".")
 	outfile = fname[0] + "Analysis.txt"
 
-	# if filePath:
-	# 	print(f"File path: {filePath}")
-	# else:
-	# 	print("No file selected")
+	# Make sure there is a file to analyze!
+
 	# END OF ARG PASRSE -------------------------------------------
 
 	# SETT LOGIC
@@ -275,6 +266,7 @@ def main():
 	defaultBounds = [0, 10**12]
 
 	numVar = get_numVar(func)
+	# Broken! Somehow the lowerbound is higher than the upper
 	bounds = get_bounds(usrBounds, defaultBounds ,numVar)
 
 	frmtdData = get_frmtdData(dataFormat, dataFile)
@@ -284,6 +276,12 @@ def main():
 	data = np.delete(data, 0, axis=0)
 	optimizedParameters = np.empty((len(data),numVar))
 	statistics = np.empty((len(data),3))
+
+	# if sett_fit:
+	fit_data(
+		data, xdata, func,
+		optimizedParameters, usrBounds, statistics, sett_plot
+	)
 
 	# Statistical analysis
 	avgRSquared = np.mean(statistics[:, 0])
@@ -299,6 +297,7 @@ def main():
 		export_term(optimizedParameters, statistics)
 
 	if sett_outxlsx:
+		# Add plot data in excel!
 		export_xlsx(optimizedParameters, statistics, fname)
 	
 	if sett_plot:
