@@ -7,10 +7,6 @@ import openpyxl as xl
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
-#----------------------------
-# SETTINGS
-#----------------------------
-
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
@@ -22,31 +18,6 @@ def func(x, a, b):
 # a=A, b=B, c=k1, d=k2, f=ti
 #a * (np.exp(-c * (x+f)) - np.exp(-d * (x+f))) + b
 
-# Input data format
-# 0= .txt where first column x, all other columns y
-# Broken 1= .csv, alternating x y columns
-# 2= .txt output from plate reader
-# Broken 3= .txt output from Horiba
-dataFormat = 2
-
-# What is the index of the variable?
-kIndex = 1;
-
-# Export results to terminal?
-sett_outTerm = True
-
-# Export the results to a .txt file?
-# Broken
-sett_outTxt = False
-# fname = dataFile.split(".")
-# outfile = fname[0] + "Analysis.txt"
-
-# Export the results to an excel file?
-sett_outxlsx = False
-
-#----------------------------
-#----------------------------
-
 # Determine number of variables to optimize
 def get_numVar(func):
 	funcSignature = inspect.signature(func)
@@ -55,18 +26,18 @@ def get_numVar(func):
 
 # Fix bounds
 def get_bounds(bounds, defaultBounds ,numVar):
-	lowerBound = np.zeros(numVar)
-	upperBound = np.zeros(numVar)
+	lowerBound = []
+	upperBound = []
 	for x in range(numVar):
 		try:
-			lowerBound[x] = bounds[0][x]
+			lowerBound.append(bounds[0][x])
 		except:
-			lowerBound[x] = defaultBounds[0]
+			lowerBound.append(defaultBounds[0])
 		try:
-			upperBound[x] = bounds[1][x]
+			upperBound.append(bounds[1][x])
 		except:
-			upperBound[x] = defaultBounds[1]
-		return (lowerBound, upperBound)
+			upperBound.append(defaultBounds[1])
+	return (lowerBound, upperBound)
 
 # Convert an np array to a tab separated string
 def arr2str(arr):
@@ -147,8 +118,8 @@ def fit_data(
 			print(f"Failed to fit {n}th curve")
 
 		# Trying to use pcov:
-		perr = np.sqrt(np.diag(pcov))
-		print(f"perr is: \n{perr}\n")
+		# perr = np.sqrt(np.diag(pcov))
+		# print(f"perr is: \n{perr}\n")
 
 		optimizedPerameters[n] = popt
 
@@ -223,13 +194,28 @@ def prnt_k(xk1, optimizedPerameters, kIndex):
 
 
 def main():
-	sett_fit = True
+	dataFormat = 2
+	# What is the index of the variable of interest?
+	kIndex = 1;
+	# Export results to terminal?
+	sett_outTerm = True
+
+	# Export the results to a .txt file?
+	# Broken
+	sett_outTxt = False
+	# fname = dataFile.split(".")
+	# outfile = fname[0] + "Analysis.txt"
+
+	# Export the results to an excel file?
+	sett_outxlsx = False
+
 	parser = argparse.ArgumentParser()
 	parser.add_argument("file", help="files to analyze", nargs='*')
 	parser.add_argument("-p", "--plot", help="plot data", action="store_true")
+
+	# This is inverted, intentionally. -f True means to NOT fit.
 	parser.add_argument("-f", "--fit", help="fit data", action="store_true")
 	args = parser.parse_args()
-	print(f"File is: {args.file}");
 	if args.plot:
 		sett_plot = True
 		sett_plotK = True
@@ -246,7 +232,7 @@ def main():
 		# Cheaply grabs first filename
 		dataFile = args.file[0]
 
-	print(f"dataFile is {dataFile}")
+	print(f"File:{dataFile}")
 
 	fname = dataFile.split(".")
 	outfile = fname[0] + "Analysis.txt"
@@ -270,7 +256,6 @@ def main():
 	# Broken! Somehow the lowerbound is higher than the upper
 	bounds = get_bounds(usrBounds, defaultBounds ,numVar)
 	print(f"Bounds:{bounds}")
-	print(F"usrBounds:{usrBounds}")	
 
 	frmtdData = get_frmtdData(dataFormat, dataFile)
 
@@ -280,10 +265,10 @@ def main():
 	optimizedParameters = np.empty((len(data),numVar))
 	statistics = np.empty((len(data),3))
 
-	if sett_fit:
+	if not args.fit:
 		fit_data(
 			data, xdata, func,
-			optimizedParameters, usrBounds, statistics, sett_plot
+			optimizedParameters, bounds, statistics, sett_plot
 		)
 
 	# Statistical analysis
