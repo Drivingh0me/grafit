@@ -7,6 +7,22 @@ import openpyxl as xl
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
+class Function:
+	def __init__(self, func: str):
+		self.string = str(func)
+
+	def lambda(self) -> int:
+		return 1
+
+	# id is and optional arg
+	def format(self, id: int | None = None) -> self:
+		""" Formats the file to ba analyzed """
+		return self
+
+	# Can take either an int or str
+	def bounds(self, data: int | str):
+		return 0
+
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
