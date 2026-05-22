@@ -263,11 +263,14 @@ def main():
 	# Bounds for fitting curve
 	# Array size should match number of variables to optimize
 	usrBounds = ([0, 0], [10000000, 0.5])
+	print(F"usrBounds:{usrBounds}")
 	defaultBounds = [0, 10**12]
 
 	numVar = get_numVar(func)
 	# Broken! Somehow the lowerbound is higher than the upper
 	bounds = get_bounds(usrBounds, defaultBounds ,numVar)
+	print(f"Bounds:{bounds}")
+	print(F"usrBounds:{usrBounds}")	
 
 	frmtdData = get_frmtdData(dataFormat, dataFile)
 
@@ -277,11 +280,11 @@ def main():
 	optimizedParameters = np.empty((len(data),numVar))
 	statistics = np.empty((len(data),3))
 
-	# if sett_fit:
-	fit_data(
-		data, xdata, func,
-		optimizedParameters, usrBounds, statistics, sett_plot
-	)
+	if sett_fit:
+		fit_data(
+			data, xdata, func,
+			optimizedParameters, usrBounds, statistics, sett_plot
+		)
 
 	# Statistical analysis
 	avgRSquared = np.mean(statistics[:, 0])
