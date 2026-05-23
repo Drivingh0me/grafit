@@ -26,9 +26,6 @@ import math
 
 usr_func = "a * np.exp(-b * x)"
 
-# def func(x, a, func_txt: str):
-# 	return eval(func_txt)
-
 # Restrict variables to prevent malicous function formation
 class Function:
 	def __init__(self, function: str, numvar: int):
@@ -37,16 +34,25 @@ class Function:
 
 my_func = Function(usr_func, 3)
 
-# Define the function to fit
-# Make universal usage of variables
-# a=A, b=B, c=kobs
 # parameters = ("a","b")
-# def func(x, a, b):
-# 	return a * np.exp(-b * x)
+def dflt_func_exp(x, a, b):
+	return a * np.exp(-b * x)
 
-# Eg. Worst case function
-# a=A, b=B, c=k1, d=k2, f=ti
-#a * (np.exp(-c * (x+f)) - np.exp(-d * (x+f))) + b
+# parameters = ("a","b")
+def dflt_func_dbl_exp(x, a, b):
+	return a * (np.exp(-b * x) - np.exp(-c * x)) + d
+
+# parameters = ("a","b")
+def dflt_func_exp_s(x, a, b):
+	return a * np.exp(-b * (x + c))
+
+# parameters = ("a","b")
+def dflt_func_dbl_exp_ind(x, a, b):
+	return a * np.exp(-b * x) - c * np.exp(-d * x) + f
+
+# parameters = ("a","b")
+def dflt_func_poly(x, a, b):
+	return a * x**4 + b * x**3 + c * x**2 + d * x + f
 
 # Determine number of variables to optimize
 def get_numVar(func):
@@ -81,32 +87,36 @@ def frmt_csv(file):
 def frmt_pltreader(file):
 	# Ignore non-utf8 characters
 
-	with open(file, 'r', encoding='utf-8', errors='ignore') as pfile:
-		fileLns = pfile.readlines()
-		for i in range(37, len(fileLns)):
-			row = fileLns[i]
-			elems = row.split('\t')
-			try:
-				elems.pop(1)
-			except:
-				break
-			# Remove blank elements of elems.
-			elems = [el for el in elems if el != '']
-			elems = [el for el in elems if el != '\n']
-			# Convert first column to seconds from HH:MM:SS.
-			colTime = elems[0]
-			oddTime = colTime.split(':')
-			hours = int(oddTime[0])
-			minutes = int(oddTime[1])
-			seconds = int(oddTime[2])
-			elems[0] = hours*3600+minutes*60+seconds
-			# Convert elements of elems to int.
-			elems = [int(item) for item in elems]
-			# Add elements of elems to numpy array.
-			if i == 37:
-				dArr = np.array(elems)
-			else:
-				dArr = np.vstack([dArr, elems])
+	try:
+		with open(file, 'r', encoding='utf-8', errors='ignore') as pfile:
+			fileLns = pfile.readlines()
+			for i in range(37, len(fileLns)):
+				row = fileLns[i]
+				elems = row.split('\t')
+				try:
+					elems.pop(1)
+				except:
+					break
+				# Remove blank elements of elems.
+				elems = [el for el in elems if el != '']
+				elems = [el for el in elems if el != '\n']
+				# Convert first column to seconds from HH:MM:SS.
+				colTime = elems[0]
+				oddTime = colTime.split(':')
+				hours = int(oddTime[0])
+				minutes = int(oddTime[1])
+				seconds = int(oddTime[2])
+				elems[0] = hours*3600+minutes*60+seconds
+				# Convert elements of elems to int.
+				elems = [int(item) for item in elems]
+				# Add elements of elems to numpy array.
+				if i == 37:
+					dArr = np.array(elems)
+				else:
+					dArr = np.vstack([dArr, elems])
+	except:
+		raise ValueError("File does not exist!")
+
 	return dArr
 
 def frmt_horiba(file):
@@ -115,7 +125,10 @@ def frmt_horiba(file):
 # if guard to determine value for frmtdData.
 def get_frmtdData(dataFormat, dataFile):
 	if dataFormat == 0: # Simple x column + y columns
-		frmtdData = np.loadtxt(dataFile, delimiter='\t')
+		try:
+			frmtdData = np.loadtxt(dataFile, delimiter='\t')
+		except:
+			raise ValueError("File does not exist!")
 
 	elif dataFormat == 1: # .csv file
 		raise ValueError("csv format not implemented")
@@ -179,11 +192,11 @@ def fit_data(
 		n += 1
 
 # EXPORT DATA
-def export_txt(optimizedParameters, statistics):
+def export_txt(optimizedParameters, statistics, outfile):
 	with open(outfile, "w") as f:
 		# Report parameters and statistics
 		f.write("Optimize parameters are: a, b, c...\n" 
-			+ arr2str(optimizedPerameters) + "\n")
+			+ arr2str(optimizedParameters) + "\n")
 		f.write("Statistics are: R^2, RMSE, integration\n" 
 			+ arr2str(statistics))
 	
@@ -227,21 +240,21 @@ def main():
 	dataFormat = 2
 	# What is the index of the variable of interest?
 	kIndex = 1;
-	# Export results to terminal?
-	sett_outTerm = True
-
-	# Export the results to a .txt file?
-	# Broken
-	sett_outTxt = False
-	# fname = dataFile.split(".")
-	# outfile = fname[0] + "Analysis.txt"
-
-	# Export the results to an excel file?
-	sett_outxlsx = False
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument("file", help="files to analyze", nargs='*')
 	parser.add_argument("-p", "--plot", help="plot data", action="store_true")
+	parser.add_argument(
+		"-d", "--debug", help="debug mode", action="store_true"
+	)
+
+	parser.add_argument(
+		"-E", "--Excel", help="export xlsx", action="store_true"
+	)
+
+	parser.add_argument(
+		"-T", "--Txt", help="export txt", action="store_true"
+	)
 
 	# This is inverted, intentionally. -f True means to NOT fit.
 	parser.add_argument("-f", "--fit", help="fit data", action="store_true")
@@ -262,16 +275,14 @@ def main():
 		# Cheaply grabs first filename
 		dataFile = args.file[0]
 
-	print(f"File:{dataFile}")
+	if args.debug:
+		print(f"File:{dataFile}")
 
 	fname = dataFile.split(".")
 	outfile = fname[0] + "Analysis.txt"
 
-	# Make sure there is a file to analyze!
+	# Make sure there is a file to analyze!\
 
-	# END OF ARG PASRSE -------------------------------------------
-
-	# SETT LOGIC
 	if not sett_plot:
 		sett_plotK = False
 		sett_plotCurv = False
@@ -279,14 +290,19 @@ def main():
 	# Bounds for fitting curve
 	# Array size should match number of variables to optimize
 	usrBounds = ([0, 0], [10000000, 0.5])
-	print(F"usrBounds:{usrBounds}")
+
+	if args.debug:
+		print(F"usrBounds:{usrBounds}")
+
 	defaultBounds = [0, 10**12]
 
 	# numVar = get_numVar(func)
 	numVar = my_func.numvar - 1
 	# Broken! Somehow the lowerbound is higher than the upper
 	bounds = get_bounds(usrBounds, defaultBounds ,numVar)
-	print(f"Bounds:{bounds}")
+
+	if args.debug:
+		print(f"Bounds:{bounds}")
 
 	frmtdData = get_frmtdData(dataFormat, dataFile)
 
@@ -309,13 +325,13 @@ def main():
 	#Depends on Func
 	xk1 = list(range(len(optimizedParameters[:, kIndex])))
 
-	if sett_outTxt:
-		export_txt(optimizedParameters, statistics)
+	if args.Txt:
+		export_txt(optimizedParameters, statistics, outfile)
 
-	if sett_outTerm:
+	if not(args.Txt or args.Excel):
 		export_term(optimizedParameters, statistics)
 
-	if sett_outxlsx:
+	if args.Excel:
 		# Add plot data in excel!
 		export_xlsx(optimizedParameters, statistics, fname)
 	
@@ -324,7 +340,8 @@ def main():
 			prnt_k(xk1, optimizedParameters, kIndex)
 		plt.show()
 	
-	print("Finished")
+	if args.debug:
+		print("Finished")
 
 if __name__ == "__main__":
 	main()
