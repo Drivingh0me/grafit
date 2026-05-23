@@ -6,29 +6,43 @@ import inspect
 import openpyxl as xl
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
+import math
 
+# class Function:
+# 	def __init__(self, func: str):
+# 		self.string = str(func)
+#
+# 	def lambda(self) -> int:
+# 		return 1
+#
+# 	# id is and optional arg
+# 	def format(self, id: int | None = None) -> self:
+# 		""" Formats the file to ba analyzed """
+# 		return self
+#
+# 	# Can take either an int or str
+# 	def bounds(self, data: int | str):
+# 		return 0
+
+usr_func = "a * np.exp(-b * x)"
+
+# def func(x, a, func_txt: str):
+# 	return eval(func_txt)
+
+# Restrict variables to prevent malicous function formation
 class Function:
-	def __init__(self, func: str):
-		self.string = str(func)
+	def __init__(self, function: str, numvar: int):
+		self.func = lambda x, a, b: eval(function)
+		self.numvar = numvar
 
-	def lambda(self) -> int:
-		return 1
-
-	# id is and optional arg
-	def format(self, id: int | None = None) -> self:
-		""" Formats the file to ba analyzed """
-		return self
-
-	# Can take either an int or str
-	def bounds(self, data: int | str):
-		return 0
+my_func = Function(usr_func, 3)
 
 # Define the function to fit
 # Make universal usage of variables
 # a=A, b=B, c=kobs
-parameters = ("a","b")
-def func(x, a, b):
-	return a * np.exp(-b * x)
+# parameters = ("a","b")
+# def func(x, a, b):
+# 	return a * np.exp(-b * x)
 
 # Eg. Worst case function
 # a=A, b=B, c=k1, d=k2, f=ti
@@ -268,7 +282,8 @@ def main():
 	print(F"usrBounds:{usrBounds}")
 	defaultBounds = [0, 10**12]
 
-	numVar = get_numVar(func)
+	# numVar = get_numVar(func)
+	numVar = my_func.numvar - 1
 	# Broken! Somehow the lowerbound is higher than the upper
 	bounds = get_bounds(usrBounds, defaultBounds ,numVar)
 	print(f"Bounds:{bounds}")
@@ -283,7 +298,7 @@ def main():
 
 	if not args.fit:
 		fit_data(
-			data, xdata, func,
+			data, xdata, my_func.func,
 			optimizedParameters, bounds, statistics, sett_plot
 		)
 
