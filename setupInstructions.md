@@ -21,4 +21,18 @@ pip install -r requirements.txt
 deactivate
 ```
 
-## To 
+## To use grafit:
+* First activate the vitrual environment:
+```
+source venv/bin/activate
+```
+
+* Then you can run the program:
+```
+python3 grafit.py <file path> <flags>
+```
+
+* Once done, close the virtual environment:
+```
+deactivate
+```

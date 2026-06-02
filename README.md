@@ -1,10 +1,10 @@
-# grafit v0.1.3
+# grafit v0.1.3 (alpha)
 A simple python script for fitting and plotting chemical kinetics data.
 Some features also work well for other chemical data, such as plotting ESI_MS
 data.
 
 ## How to install requirements with pip
-Run the following in the project directory:
+Run the following in the grafit directory:
 ```
 pip install -r requirements.txt
 ```

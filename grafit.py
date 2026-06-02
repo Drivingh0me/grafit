@@ -24,6 +24,7 @@ import math
 # 	def bounds(self, data: int | str):
 # 		return 0
 
+# Make this a user input
 usr_func = "a * np.exp(-b * x)"
 
 # Restrict variables to prevent malicous function formation
@@ -87,6 +88,7 @@ def frmt_csv(file):
 def frmt_pltreader(file):
 	# Ignore non-utf8 characters
 
+	# Pull out the read as a separate function
 	try:
 		with open(file, 'r', encoding='utf-8', errors='ignore') as pfile:
 			fileLns = pfile.readlines()
