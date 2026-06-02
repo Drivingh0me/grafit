@@ -4,7 +4,7 @@ Some features also work well for other chemical data, such as plotting ESI_MS
 data.
 
 ## How to install requirements with pip
-Run the following command in the project directory:
+Run the following in the project directory:
 ```
 pip install -r requirements.txt
 ```
@@ -17,9 +17,9 @@ The __file path__ argument is necessary.
 If __a file path__ is not given, grafit will open up a gui to select a file.
 
 ### Flags 
-(-short/--long) Desription, arg description. (number of arguments)
-- `-d/--debug` Chooses a file to analyze.
-- `-f/--fit` Fit data to function, function. (1)
-- `-p/--plot` Plots the data.
-- `-E/--Excel` Export to excel file.
-- `-T/--Txt` Export to text file.
+__-short/--long__ Desription, arg description. (number of arguments)
+- __-d/--debug__ Chooses a file to analyze.
+- __-f/--fit__ Fit data to function, function. (1)
+- __-p/--plot__ Plots the data.
+- __-E/--Excel__ Export to excel file.
+- __-T/--Txt__ Export to text file.
