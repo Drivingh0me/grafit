@@ -18,6 +18,7 @@ If __a file path__ is not given, grafit will open up a gui to select a file.
 
 ### Flags 
 __-short/--long__ Desription, arg description. (number of arguments)
+- __-c/--control__ Chooses a script file to control grafit. (1)
 - __-d/--debug__ Chooses a file to analyze.
 - __-f/--fit__ Fit data to function, function. (1)
 - __-p/--plot__ Plots the data.
