@@ -9,8 +9,10 @@ Run the following command in the project directory (chlorine35):
 
 ## How to run grafit
 Run grafit by executing the grafit.py script with python3:
-    python3 grafit.py `<flags>`
+    python3 grafit.py `<file path> ` `<flags>`
 
 ### Flags (-short/--long)
-- -p/--plot Plots the data.
-- -f/--file Chooses a file to analyze.
+- `-d/--debug` Chooses a file to analyze.
+- `-E/--Excel` Export to excel file.
+- `-T/--Txt` Export to text file.
+- `-p/--plot` Plots the data.
