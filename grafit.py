@@ -102,6 +102,8 @@ def frmt_pltreader(file):
                 # Remove blank elements of elems.
                 elems = [el for el in elems if el != '']
                 elems = [el for el in elems if el != '\n']
+                # Assume overflow is 6E6.
+                # elems = [el for el in elems if el != "OVRFLW"]
                 # Convert first column to seconds from HH:MM:SS.
                 colTime = elems[0]
                 oddTime = colTime.split(':')
@@ -213,7 +215,7 @@ def export_xlsx(optimizedParameters, statistics, fname):
     ws = wb.active
 
     # Label coumns
-    ws.append(parameters)
+    # ws.append(parameters)
 
     for row in optimizedParameters:
         ws.append(row.tolist())
