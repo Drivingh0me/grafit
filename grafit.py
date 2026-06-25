@@ -249,6 +249,9 @@ def main():
     parser.add_argument("file", help="files to analyze", nargs='*')
     parser.add_argument("-p", "--plot", help="plot data", action="store_true")
     parser.add_argument(
+        "-e", "--equation", help="function to fit to", nargs=1
+    )
+    parser.add_argument(
         "-d", "--debug", help="debug mode", action="store_true"
     )
 
@@ -281,6 +284,8 @@ def main():
 
     if args.debug:
         print(f"File:{dataFile}")
+
+    # if agrgs.equation = "se" || "Ae^(-bx)"
 
     fname = dataFile.split(".")
     outfile = fname[0] + "Analysis.txt"
