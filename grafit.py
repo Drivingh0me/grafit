@@ -7,6 +7,7 @@ import openpyxl as xl
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 import math
+import random
 
 # class Function:
 #     def __init__(self, func: str):
@@ -24,42 +25,48 @@ import math
 #     def bounds(self, data: int | str):
 #         return 0
 
-# Make this a user input
-usr_func = "a * np.exp(-b * x)"
-
 # Restrict variables to prevent malicous function formation
+var_names = ['x', 'a', 'b', 'c', 'd', 'f']
 class Function:
-    def __init__(self, function: str, numvar: int):
-        self.func = lambda x, a, b: eval(function)
-        self.numvar = numvar
+    # def __init__(self, function: str, numvar: int):
+    #     self.func = lambda x, a, b: eval(function)
+    #     self.numvar = numvar
+    def __init__(self, function: str):
+        self.func_str = function
+        self.numvar = len(set(function) & set(var_names))
+        self._globals = {
+            'np': np,
+            '__builtins__': {}
+        }
 
-my_func = Function(usr_func, 3)
+    def __call__(self, *args):
+        if len(args) != self.numvar:
+            raise ValueError("Incorrect number of args to function call")
+
+        local_vars = dict(zip(var_names, args))
+
+        return eval(self.func_str, self._globals, local_vars)
+
 
 # parameters = ("a","b")
 def dflt_func_exp(x, a, b):
     return a * np.exp(-b * x)
 
 # parameters = ("a","b")
-def dflt_func_dbl_exp(x, a, b):
+def dflt_func_dbl_exp(x, a, b, c, d):
     return a * (np.exp(-b * x) - np.exp(-c * x)) + d
 
 # parameters = ("a","b")
-def dflt_func_exp_s(x, a, b):
+def dflt_func_exp_s(x, a, b, c):
     return a * np.exp(-b * (x + c))
 
 # parameters = ("a","b")
-def dflt_func_dbl_exp_ind(x, a, b):
+def dflt_func_dbl_exp_ind(x, a, b, c, d, f):
     return a * np.exp(-b * x) - c * np.exp(-d * x) + f
 
 # parameters = ("a","b")
-def dflt_func_poly(x, a, b):
+def dflt_func_poly(x, a, b, c, d, f):
     return a * x**4 + b * x**3 + c * x**2 + d * x + f
-
-# Determine number of variables to optimize
-def get_numVar(func):
-    funcSignature = inspect.signature(func)
-    funcParameters = funcSignature.parameters
-    return len(funcParameters) - 1
 
 # Fix bounds
 def get_bounds(bounds, defaultBounds ,numVar):
@@ -149,26 +156,37 @@ def get_frmtdData(dataFormat, dataFile):
 
 # Fit the function to the data
 def fit_data(
-        data, xdata, func, optimizedPerameters,
+        data, xdata, func, optimizedParameters,
         bounds, statistics, sett_plot
-    ):
+):
+    # Debug temp code----------------------------------------------------------
+    print(f"numvar: {func.numvar}\n")
+    val = np.array([])
+    for var in range(func.numvar):
+        val = np.append(val, random.random())
+    print(f"values are: {val}\n")
+
+    result = func(*val)
+    print(f"result is: {result}\n")
+    #--------------------------------------------------------------------------
+
     n = 0
     for ydata in data:
         try:
             popt, pcov = curve_fit(
-                func, 
-                np.transpose(xdata), 
+                func,
+                np.transpose(xdata),
                 ydata, bounds = bounds
             )
         except:
-            popt = np.zeros(numVar)
+            popt = np.zeros(func.numvar - 1)
             print(f"Failed to fit {n}th curve")
 
         # Trying to use pcov:
         # perr = np.sqrt(np.diag(pcov))
         # print(f"perr is: \n{perr}\n")
 
-        optimizedPerameters[n] = popt
+        optimizedParameters[n] = popt
 
         ydata_try = np.tile(popt[:, np.newaxis], (1, len(xdata)))
         # Plot individual trials
@@ -241,6 +259,7 @@ def prnt_k(xk1, optimizedPerameters, kIndex):
 
 
 def main():
+    # Make this a flag option
     dataFormat = 2
     # What is the index of the variable of interest?
     kIndex = 1;
@@ -249,10 +268,16 @@ def main():
     parser.add_argument("file", help="files to analyze", nargs='*')
     parser.add_argument("-p", "--plot", help="plot data", action="store_true")
     parser.add_argument(
-        "-e", "--equation", help="function to fit to", nargs=1
+        "-a", "--format", help="data format", nargs=1
+    )
+    parser.add_argument(
+        "-b", "--bounds", help="fitting bounds", nargs='*'
     )
     parser.add_argument(
         "-d", "--debug", help="debug mode", action="store_true"
+    )
+    parser.add_argument(
+        "-e", "--equation", help="function to fit to", nargs=1
     )
 
     parser.add_argument(
@@ -274,7 +299,16 @@ def main():
         sett_plot = False
         sett_plotk = False
 
-    # Only do this when no file from cli
+    # Define Function from User
+    usr_num_var = 3 # Default
+    if args.equation is None:
+        usr_func = "a * np.exp(-b * x)"
+    else:
+        usr_func = "".join(args.equation)
+
+    my_func = Function(usr_func)
+
+    # Open file explorer when no file provided from cli
     if args.file == []:
         Tk().withdraw()
         dataFile = askopenfilename()
@@ -290,7 +324,7 @@ def main():
     fname = dataFile.split(".")
     outfile = fname[0] + "Analysis.txt"
 
-    # Make sure there is a file to analyze!\
+    # Make sure there is a file to analyze!
 
     if not sett_plot:
         sett_plotK = False
@@ -305,7 +339,6 @@ def main():
 
     defaultBounds = [0, 10**12]
 
-    # numVar = get_numVar(func)
     numVar = my_func.numvar - 1
     # Broken! Somehow the lowerbound is higher than the upper
     bounds = get_bounds(usrBounds, defaultBounds ,numVar)
@@ -323,7 +356,7 @@ def main():
 
     if not args.fit:
         fit_data(
-            data, xdata, my_func.func,
+            data, xdata, my_func,
             optimizedParameters, bounds, statistics, sett_plot
         )
 
