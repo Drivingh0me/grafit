@@ -71,25 +71,25 @@ def create_function(func_str: str, var_names=['x', 'a', 'b', 'c', 'd', 'f']):
 
     return func
 
-# parameters = ("a","b")
-def dflt_func_exp(x, a, b):
-    return a * np.exp(-b * x)
-
-# parameters = ("a","b")
-def dflt_func_dbl_exp(x, a, b, c, d):
-    return a * (np.exp(-b * x) - np.exp(-c * x)) + d
-
-# parameters = ("a","b")
-def dflt_func_exp_s(x, a, b, c):
-    return a * np.exp(-b * (x + c))
-
-# parameters = ("a","b")
-def dflt_func_dbl_exp_ind(x, a, b, c, d, f):
-    return a * np.exp(-b * x) - c * np.exp(-d * x) + f
-
-# parameters = ("a","b")
-def dflt_func_poly(x, a, b, c, d, f):
-    return a * x**4 + b * x**3 + c * x**2 + d * x + f
+# # parameters = ("a","b")
+# def dflt_func_exp(x, a, b):
+#     return a * np.exp(-b * x)
+#
+# # parameters = ("a","b")
+# def dflt_func_dbl_exp(x, a, b, c, d):
+#     return a * (np.exp(-b * x) - np.exp(-c * x)) + d
+#
+# # parameters = ("a","b")
+# def dflt_func_exp_s(x, a, b, c):
+#     return a * np.exp(-b * (x + c))
+#
+# # parameters = ("a","b")
+# def dflt_func_dbl_exp_ind(x, a, b, c, d, f):
+#     return a * np.exp(-b * x) - c * np.exp(-d * x) + f
+#
+# # parameters = ("a","b")
+# def dflt_func_poly(x, a, b, c, d, f):
+#     return a * x**4 + b * x**3 + c * x**2 + d * x + f
 
 # Fix bounds
 def get_bounds(bounds, defaultBounds ,numVar):
