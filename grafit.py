@@ -26,27 +26,50 @@ import random
 #         return 0
 
 # Restrict variables to prevent malicous function formation
-var_names = ['x', 'a', 'b', 'c', 'd', 'f']
-class Function:
-    # def __init__(self, function: str, numvar: int):
-    #     self.func = lambda x, a, b: eval(function)
-    #     self.numvar = numvar
-    def __init__(self, function: str):
-        self.func_str = function
-        self.numvar = len(set(function) & set(var_names))
-        self._globals = {
-            'np': np,
-            '__builtins__': {}
-        }
+# var_names = ['x', 'a', 'b', 'c', 'd', 'f']
+# class Function:
+#     # def __init__(self, function: str, numvar: int):
+#     #     self.func = lambda x, a, b: eval(function)
+#     #     self.numvar = numvar
+#     def __init__(self, function: str):
+#         self.func_str = function
+#         self.numvar = len(set(function) & set(var_names))
+#         self._globals = {
+#             'np': np,
+#             '__builtins__': {}
+#         }
+#
+#     def __call__(self, *args):
+#         if len(args) != self.numvar:
+#             raise ValueError("Incorrect number of args to function call")
+#
+#         local_vars = dict(zip(var_names, args))
+#
+#         return eval(self.func_str, self._globals, local_vars)
 
-    def __call__(self, *args):
-        if len(args) != self.numvar:
-            raise ValueError("Incorrect number of args to function call")
+def create_function(func_str: str, var_names=['x', 'a', 'b', 'c', 'd', 'f']):
+    # Extract variables present in the user string
+    # Ensure 'x' is always first
+    used_vars = [v for v in var_names if v in func_str]
+    if 'x' not in used_vars:
+        used_vars.insert(0, 'x')
 
-        local_vars = dict(zip(var_names, args))
+    # Construct standard function definition string
+    # Example: "def dynamic_func(x, a, b):\n    return a * np.exp(-b * x)"
+    args_str = ", ".join(used_vars)
+    code = f"def dynamic_func({args_str}):\n    return {func_str}"
 
-        return eval(self.func_str, self._globals, local_vars)
+    # Execute code in a controlled context
+    local_env = {}
+    global_env = {'np': np, 'math': math}
+    exec(code, global_env, local_env)
 
+    func = local_env['dynamic_func']
+    # Attach helper attributes so the rest of your script stays intact
+    func.numvar = len(used_vars)
+    func.func_str = func_str
+
+    return func
 
 # parameters = ("a","b")
 def dflt_func_exp(x, a, b):
@@ -176,7 +199,8 @@ def fit_data(
             popt, pcov = curve_fit(
                 func,
                 np.transpose(xdata),
-                ydata, bounds = bounds
+                ydata,
+                bounds = bounds
             )
         except:
             popt = np.zeros(func.numvar - 1)
@@ -306,7 +330,7 @@ def main():
     else:
         usr_func = "".join(args.equation)
 
-    my_func = Function(usr_func)
+    my_func = create_function(usr_func)
 
     # Open file explorer when no file provided from cli
     if args.file == []:
@@ -340,7 +364,6 @@ def main():
     defaultBounds = [0, 10**12]
 
     numVar = my_func.numvar - 1
-    # Broken! Somehow the lowerbound is higher than the upper
     bounds = get_bounds(usrBounds, defaultBounds ,numVar)
 
     if args.debug:
