@@ -1,4 +1,4 @@
-# grafit v0.1.3 (alpha)
+# grafit v0.1.4 (alpha)
 A simple python script for fitting and plotting chemical kinetics data.
 Some features also work well for other chemical data, such as plotting ESI_MS
 data.
