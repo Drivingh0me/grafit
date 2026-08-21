@@ -15,44 +15,6 @@ import random
 
 # TODO: Make ploting formatted and to a save file, option show.
 
-# class Function:
-#     def __init__(self, func: str):
-#         self.string = str(func)
-#
-#     def lambda(self) -> int:
-#         return 1
-#
-#     # id is and optional arg
-#     def format(self, id: int | None = None) -> self:
-#         """ Formats the file to ba analyzed """
-#         return self
-#
-#     # Can take either an int or str
-#     def bounds(self, data: int | str):
-#         return 0
-
-# Restrict variables to prevent malicous function formation
-# var_names = ['x', 'a', 'b', 'c', 'd', 'f']
-# class Function:
-#     # def __init__(self, function: str, numvar: int):
-#     #     self.func = lambda x, a, b: eval(function)
-#     #     self.numvar = numvar
-#     def __init__(self, function: str):
-#         self.func_str = function
-#         self.numvar = len(set(function) & set(var_names))
-#         self._globals = {
-#             'np': np,
-#             '__builtins__': {}
-#         }
-#
-#     def __call__(self, *args):
-#         if len(args) != self.numvar:
-#             raise ValueError("Incorrect number of args to function call")
-#
-#         local_vars = dict(zip(var_names, args))
-#
-#         return eval(self.func_str, self._globals, local_vars)
-
 # AI generated function - unvalidated
 def create_function(func_str: str, var_names=['x', 'a', 'b', 'c', 'd', 'f']):
     # Extract variables present in the user string
@@ -189,17 +151,6 @@ def fit_data(
         data, xdata, func, optimizedParameters,
         bounds, statistics, sett_plot
 ):
-    # Debug temp code----------------------------------------------------------
-    print(f"numvar: {func.numvar}\n")
-    val = np.array([])
-    for var in range(func.numvar):
-        val = np.append(val, random.random())
-    print(f"values are: {val}\n")
-
-    result = func(*val)
-    print(f"result is: {result}\n")
-    #--------------------------------------------------------------------------
-
     n = 0
     for ydata in data:
         try:
