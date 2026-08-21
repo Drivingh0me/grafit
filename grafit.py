@@ -9,7 +9,9 @@ from tkinter.filedialog import askopenfilename
 import math
 import random
 
-# TODO: Add support for horiba files and config by name.
+plt.style.use("custom.mplstyle")
+
+# TODO: Add support for horiba files and config by name or config file.
 
 # TODO: Partition source into multiple files.
 
@@ -174,10 +176,15 @@ def fit_data(
         # Plot individual trials
         if sett_plot:
             try:
-                plt.figure()
+                plt.figure(layout="constrained")
                 plt.plot(xdata, func(xdata, *ydata_try), '-', label='fit')
                 plt.plot(xdata, ydata, 'o', label='data')
-                plt.legend()
+                plt.legend(
+                    loc="upper center",
+                    bbox_to_anchor=(0.5, -0.15),
+                    ncol=2
+                )
+                plt.savefig(f"fig{n}.png")
             except:
                 print("Failed to plot fit data")
 
@@ -276,7 +283,6 @@ def main():
     if args.plot:
         sett_plot = True
         sett_plotK = True
-        print("ploting data")
     else:
         sett_plot = False
         sett_plotk = False
@@ -302,11 +308,10 @@ def main():
         print(f"File:{dataFile}")
 
     # if agrgs.equation = "se" || "Ae^(-bx)"
+    # if agrgs.equation = "se+b" || "ae^(-bx)+c"
 
     fname = dataFile.split(".")
     outfile = fname[0] + "Analysis.txt"
-
-    # Make sure there is a file to analyze!
 
     if not sett_plot:
         sett_plotK = False
@@ -361,7 +366,7 @@ def main():
     if sett_plot:
         if sett_plotK:
             prnt_k(xk1, optimizedParameters, kIndex)
-        plt.show()
+        # plt.show()
 
     if args.debug:
         print("Finished")
