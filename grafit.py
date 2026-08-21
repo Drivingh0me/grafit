@@ -9,6 +9,12 @@ from tkinter.filedialog import askopenfilename
 import math
 import random
 
+# TODO: Add support for horiba files and config by name.
+
+# TODO: Partition source into multiple files.
+
+# TODO: Make ploting formatted and to a save file, option show.
+
 # class Function:
 #     def __init__(self, func: str):
 #         self.string = str(func)
@@ -47,6 +53,7 @@ import random
 #
 #         return eval(self.func_str, self._globals, local_vars)
 
+# AI generated function - unvalidated
 def create_function(func_str: str, var_names=['x', 'a', 'b', 'c', 'd', 'f']):
     # Extract variables present in the user string
     # Ensure 'x' is always first
